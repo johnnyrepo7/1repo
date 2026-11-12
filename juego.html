@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mi Primer Juego</title>
+    <style>
+        body { 
+            text-align: center; 
+            font-family: Arial, sans-serif; 
+            background-color: #1e1e2f; 
+            color: white; 
+            user-select: none;
+        }
+        #area-juego { 
+            width: 500px; 
+            height: 350px; 
+            border: 3px solid #fff; 
+            margin: 20px auto; 
+            position: relative; 
+            background-color: #2a2a40; 
+            border-radius: 10px;
+        }
+        #objetivo { 
+            width: 50px; 
+            height: 50px; 
+            background-color: #ff4757; 
+            position: absolute; 
+            cursor: pointer; 
+            border-radius: 8px; 
+            transition: 0.1s;
+        }
+    </style>
+</head>
+<body>
+    <h1>¡Atrapa el cuadro rojo!</h1>
+    <h2>Puntos: <span id="puntos">0</span></h2>
+    
+    <div id="area-juego">
+        <div id="objetivo"></div>
+    </div>
+
+    <script>
+        let puntos = 0;
+        const objetivo = document.getElementById('objetivo');
+        const textoPuntos = document.getElementById('puntos');
+
+        // Cuando le haces clic al cuadro rojo:
+        objetivo.addEventListener('click', () => {
+            puntos = puntos + 1;
+            textoPuntos.innerText = puntos;
+            
+            // Calcula una posición nueva al azar
+            const maxX = 500 - 50;
+            const maxY = 350 - 50;
+            const randomX = Math.floor(Math.random() * maxX);
+            const randomY = Math.floor(Math.random() * maxY);
+            
+            // Mueve el cuadro a la nueva posición
+            objetivo.style.left = randomX + 'px';
+            objetivo.style.top = randomY + 'px';
+        });
+    </script>
+</body>
+</html>
