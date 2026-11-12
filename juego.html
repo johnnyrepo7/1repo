@@ -1,63 +1,228 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Mi Primer Juego</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atrapa a Trump - Edición Pro</title>
     <style>
         body { 
             text-align: center; 
-            font-family: Arial, sans-serif; 
-            background-color: #1e1e2f; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             color: white; 
             user-select: none;
+            margin: 0;
+            padding-top: 15px;
+            overflow: hidden;
         }
+
+        h1 {
+            margin: 5px 0;
+            font-size: 28px;
+            text-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
+            color: #ff4757;
+        }
+
+        #hud {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 8px 25px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
         #area-juego { 
-            width: 500px; 
-            height: 350px; 
-            border: 3px solid #fff; 
-            margin: 20px auto; 
+            width: 700px; 
+            height: 450px; 
+            border: 4px solid #ff4757; 
+            margin: 10px auto; 
             position: relative; 
-            background-color: #2a2a40; 
-            border-radius: 10px;
+            background-color: rgba(18, 18, 26, 0.9); 
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(255, 71, 87, 0.3);
+            cursor: crosshair;
         }
+
         #objetivo { 
-            width: 50px; 
-            height: 50px; 
-            background-color: #ff4757; 
+            width: 75px; 
+            height: 75px; 
             position: absolute; 
             cursor: pointer; 
-            border-radius: 8px; 
-            transition: 0.1s;
+            border-radius: 50%; 
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/5/56/Donald_Trump_official_portrait.jpg');
+            background-size: cover;
+            background-position: center;
+            border: 3px solid #ffa502;
+            box-shadow: 0 0 15px #ffa502;
+            transition: transform 0.05s;
+            display: none; 
+        }
+
+        #objetivo:active {
+            transform: scale(0.85);
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 18px;
+            background: linear-gradient(45deg, #2ed573, #26af5f);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(46, 213, 115, 0.4);
+            transition: 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(46, 213, 115, 0.6);
+        }
+
+        #pantalla-inicio {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 12, 41, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        #pantalla-inicio h2 {
+            font-size: 32px;
+            color: #ffa502;
+            margin-bottom: 10px;
+        }
+
+        #pantalla-inicio p {
+            font-size: 16px;
+            color: #dcdde1;
+            max-width: 400px;
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
-    <h1>¡Atrapa el cuadro rojo!</h1>
-    <h2>Puntos: <span id="puntos">0</span></h2>
+
+    <h1>🇺🇸 Atrapa a Trump: Edición Pro 🇺🇸</h1>
     
-    <div id="area-juego">
-        <div id="objetivo"></div>
+    <div id="hud">
+        <div>Puntos: <span id="puntos" style="color: #2ed573;">0</span></div>
+        <div>Vidas: <span id="vidas" style="color: #ff4757;">❤️❤️❤️</span></div>
+        <div>Tiempo: <span id="tiempo" style="color: #ffa502;">25</span>s</div>
+    </div>
+    
+    <div id="area-juego" onclick="registrarFallido(event)">
+        <div id="pantalla-inicio">
+            <h2>¿Listo para el desafío?</h2>
+            <p>Atrapa a Trump tantas veces como puedas antes de que se acabe el tiempo. ¡Cuidado: si fallas 3 veces o dejas escapar muchos clics, pierdes vidas!</p>
+            <button onclick="iniciarJuego()">¡Comenzar Partida!</button>
+        </div>
+        <div id="objetivo" onclick="clicObjetivo(event)"></div>
     </div>
 
     <script>
         let puntos = 0;
+        let vidas = 3;
+        let tiempoRestante = 25;
+        let juegoActivo = false;
+        let temporizador;
+
         const objetivo = document.getElementById('objetivo');
         const textoPuntos = document.getElementById('puntos');
+        const textoVidas = document.getElementById('vidas');
+        const textoTiempo = document.getElementById('tiempo');
+        const pantallaInicio = document.getElementById('pantalla-inicio');
+        const areaJuego = document.getElementById('area-juego');
 
-        // Cuando le haces clic al cuadro rojo:
-        objetivo.addEventListener('click', () => {
-            puntos = puntos + 1;
+        function iniciarJuego() {
+            puntos = 0;
+            vidas = 3;
+            tiempoRestante = 25;
+            juegoActivo = true;
+            
+            textoPuntos.innerText = puntos;
+            actualizarVidas();
+            textoTiempo.innerText = tiempoRestante;
+            
+            pantallaInicio.style.display = 'none';
+            objetivo.style.display = 'block';
+            
+            moverObjetivo();
+
+            clearInterval(temporizador);
+            temporizador = setInterval(() => {
+                tiempoRestante--;
+                textoTiempo.innerText = tiempoRestante;
+
+                if (tiempoRestante <= 0) {
+                    finalizarJuego("¡Tiempo agotado! ⏱️");
+                }
+            }, 1000);
+        }
+
+        function clicObjetivo(evento) {
+            if (!juegoActivo) return;
+            evento.stopPropagation(); // Evita que cuente como fallo al hacerle clic
+            
+            puntos++;
             textoPuntos.innerText = puntos;
             
-            // Calcula una posición nueva al azar
-            const maxX = 500 - 50;
-            const maxY = 350 - 50;
+            // Cada 5 puntos se vuelve más rápido visualmente
+            moverObjetivo();
+        }
+
+        function registrarFallido(evento) {
+            if (!juegoActivo) return;
+            
+            // Si haces clic en el área negra fuera de Trump
+            vidas--;
+            actualizarVidas();
+
+            if (vidas <= 0) {
+                finalizarJuego("¡Te quedaste sin vidas! ❌");
+            }
+        }
+
+        function actualizarVidas() {
+            let corazones = "";
+            for (let i = 0; i < vidas; i++) corazones += "❤️ ";
+            textoVidas.innerText = corazones;
+        }
+
+        function moverObjetivo() {
+            const maxX = areaJuego.clientWidth - 75;
+            const maxY = areaJuego.clientHeight - 75;
             const randomX = Math.floor(Math.random() * maxX);
             const randomY = Math.floor(Math.random() * maxY);
             
-            // Mueve el cuadro a la nueva posición
             objetivo.style.left = randomX + 'px';
             objetivo.style.top = randomY + 'px';
-        });
+        }
+
+        function finalizarJuego(mensaje) {
+            juegoActivo = false;
+            clearInterval(temporizador);
+            objetivo.style.display = 'none';
+            
+            pantallaInicio.style.display = 'flex';
+            pantallaInicio.querySelector('h2').innerText = mensaje;
+            pantallaInicio.querySelector('p').innerText = 'Tu puntaje final fue de: ' + puntos + ' puntos.';
+            pantallaInicio.querySelector('button').innerText = '¡Jugar de nuevo!';
+        }
     </script>
 </body>
 </html>
